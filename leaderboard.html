@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Leaderboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f8f4f405;
+        }
+
+        .leaderboard-container {
+            background-color: #f0e6e6;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(245, 235, 235, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #007bff;
+            color: rgb(245, 237, 237);
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard-container">
+        <h1>Tic-Tac-Toe Leaderboard</h1>
+        <p>Player X: <span id="leaderboardScoreX">0</span></p>
+        <p>Player O: <span id="leaderboardScoreO">0</span></p>
+        <button onclick="window.location.href='tic-tac-toe.html'">Back to Game</button>
+    </div>
+
+    <script>
+        const leaderboardScoreX = document.getElementById('leaderboardScoreX');
+        const leaderboardScoreO = document.getElementById('leaderboardScoreO');
+
+        // Retrieve scores from local storage
+        const scoreX = localStorage.getItem('scoreX') || 0;
+        const scoreO = localStorage.getItem('scoreO') || 0;
+
+        // Display the scores
+        leaderboardScoreX.textContent = scoreX;
+        leaderboardScoreO.textContent = scoreO;
+    </script>
+</body>
+</html>

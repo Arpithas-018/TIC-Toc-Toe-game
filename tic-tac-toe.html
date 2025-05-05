@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e0f7fa; /* Light cyan background */
+        }
+
+        .leaderboard-button-container {
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .leaderboard-button:hover {
+            background-color: #1976d2;
+        }
+
+        .mode-selection {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            width: 300px;
+            height: 300px;
+            border: 2px solid #333;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .board > div:nth-child(-n+3) {
+            border-top: none;
+        }
+
+        .board > div:nth-child(3n+1) {
+            border-left: none;
+        }
+
+        .board > div:nth-child(3n+3) {
+            border-right: none;
+        }
+
+        .board > div:nth-child(n+7) {
+            border-bottom: none;
+        }
+
+        .message {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center; /* Center the messages */
+        }
+
+        .current-player {
+            font-weight: bold;
+            color: #2196f3; /* Blue color for emphasis */
+        }
+
+        button#resetButton { /* Target the reset button specifically */
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button#resetButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard-button-container">
+        <button class="leaderboard-button" onclick="window.location.href='leaderboard.html'">View Leaderboard</button>
+    </div>
+    <div class="mode-selection">
+        <input type="radio" id="playerVsPlayer" name="gameMode" value="player" checked>
+        <label for="playerVsPlayer">Player vs Player</label>
+
+        <input type="radio" id="playerVsComputer" name="gameMode" value="computer">
+        <label for="playerVsComputer">Player vs Computer</label>
+    </div>
+    <div class="message">Current Player: <span id="currentPlayer" class="current-player">X</span></div>
+    <div class="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <button id="resetButton">Reset Game</button>
+    <div class="message" id="gameResult"></div>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const currentPlayerDisplay = document.getElementById('currentPlayer');
+        const gameResultDisplay = document.getElementById('gameResult');
+        const resetButton = document.getElementById('resetButton');
+        const playerVsPlayerRadio = document.getElementById('playerVsPlayer');
+        const playerVsComputerRadio = document.getElementById('playerVsComputer');
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let gameMode = 'player'; // Default to Player vs Player
+        let scoreX = parseInt(localStorage.getItem('scoreX')) || 0;
+        let scoreO = parseInt(localStorage.getItem('scoreO')) || 0;
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function updateDisplay() {
+            currentPlayerDisplay.textContent = currentPlayer;
+        }
+
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.dataset.index);
+
+            if (gameBoard[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            gameBoard[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+
+            handleWinCondition();
+            handleDrawCondition();
+
+            if (gameActive) {
+                if (gameMode === 'player') {
+                    switchPlayer();
+                    updateDisplay();
+                } else if (gameMode === 'computer' && currentPlayer === 'X') {
+                    switchPlayer();
+                    updateDisplay();
+                    setTimeout(computerMove, 500); // Add a slight delay for the computer's move
+                }
+            }
+        }
+
+        function handleWinCondition() {
+            for (let i = 0; i <= 7; i++) {
+                const winCondition = winningConditions[i];
+                const a = gameBoard[winCondition[0]];
+                const b = gameBoard[winCondition[1]];
+                const c = gameBoard[winCondition[2]];
+
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    gameActive = false;
+                    gameResultDisplay.textContent = `Player ${currentPlayer} has won!`;
+                    if (currentPlayer === 'X') {
+                        scoreX++;
+                    } else {
+                        scoreO++;
+                    }
+                    // Save scores to local storage
+                    localStorage.setItem('scoreX', scoreX);
+                    localStorage.setItem('scoreO', scoreO);
+                    return;
+                }
+            }
+        }
+
+        function handleDrawCondition() {
+            if (!gameBoard.includes('') && gameActive) {
+                gameActive = false;
+                gameResultDisplay.textContent = `It's a draw!`;
+            }
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+
+        function resetGame() {
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            cells.forEach(cell => {
+                cell.textContent = '';
+            });
+            gameResultDisplay.textContent = '';
+            updateDisplay();
+        }
+
+        function handleModeChange() {
+            gameMode = this.value;
+            resetGame(); // Reset the game when the mode changes
+        }
+
+        function computerMove() {
+            if (!gameActive) return;
+
+            const emptyCells = gameBoard.reduce((acc, value, index) => {
+                if (value === '') {
+                    acc.push(index);
+                }
+                return acc;
+            }, []);
+
+            if (emptyCells.length > 0) {
+                const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                const computerMoveIndex = emptyCells[randomIndex];
+                gameBoard[computerMoveIndex] = 'O';
+                cells[computerMoveIndex].textContent = 'O';
+                handleWinCondition();
+                handleDrawCondition();
+                if (gameActive) {
+                    switchPlayer();
+                    updateDisplay();
+                }
+            }
+        }
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        resetButton.addEventListener('click', resetGame);
+
+        playerVsPlayerRadio.addEventListener('change', handleModeChange);
+        playerVsComputerRadio.addEventListener('change', handleModeChange);
+
+        updateDisplay();
+        // We don't need to update the leaderboard display here anymore
+    </script>
+</body>
+</html>
